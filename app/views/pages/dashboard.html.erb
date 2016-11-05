@@ -1,3 +1,8 @@
 <h1><%= current_user.first_name %>'s Profile</h1>
 <p>Username: <%= current_user.username %>
 <p>Profile picture:<br><%= image_tag(current_user.avatar.url(:medium)) %></p>
+<h2><%= current_user.first_name %>'s images</h2>
+<%= button_to "Upload an image", new_image_path, method: :get %>
+<% current_user.images.each do |image| %>
+	<p><%= link_to image_tag(image.img.url(:thumb)), image_path(image) %></p>
+<% end %>

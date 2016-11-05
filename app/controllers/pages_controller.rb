@@ -1,7 +1,9 @@
 class PagesController < ApplicationController
-  def dashboard
-  end
+	before_action :authorize
+	
+	def dashboard
+	end
 
-  def tutorial
-  end
+	def tutorial
+	end
 end

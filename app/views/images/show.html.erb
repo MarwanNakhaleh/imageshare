@@ -1,0 +1,4 @@
+<h1><%= @image.title %></h1>
+<p>Uploaded by: <%= link_to @image.user.username, users_path(@image.user) %></p>
+<p><%= image_tag(@image.img) %>
+<p><%= @image.caption %></p>

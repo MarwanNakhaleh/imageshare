@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :images
   	get '/dashboard' => 'pages#dashboard'
   	get '/tutorial' => 'pages#tutorial'
 

@@ -1,0 +1,8 @@
+<h1>Upload an image</h1>
+
+<%= form_for :image, url: "/images" do |f| %>
+	Title <%= f.text_field :title %><br />
+	Image: <%= f.file_field :img, :accept => 'image/png,image/gif,image/jpeg'  %><br />
+	Caption: <%= f.text_field :caption %><br />
+	<%= f.submit "Upload" %>
+<% end %>
