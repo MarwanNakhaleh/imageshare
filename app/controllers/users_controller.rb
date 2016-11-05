@@ -25,7 +25,8 @@ class UsersController < ApplicationController
 			:email,
 			:dob,
 			:password,
-			:password_confirmation
+			:password_confirmation,
+			:avatar
 			)
 	end
 end

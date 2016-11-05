@@ -204,3 +204,62 @@ Therefore, on every page, you will be able to login and logout. Stuff in applica
 $ rails g controller pages dashboard tutorial
 ```
 And now you have all the pages you need!  Just run 'rails s' and you'll have your user model and authentication working!
+### Adding a user avatar
+This is an image sharing website, right? Wouldn't it only be right for a user to have a profile picture?  Let's make that now.
+```bash
+$ rails g migration AddAvatarToUsers
+```
+For this one, we're gonna manually write the migration for this. Navigate to /db/migrate/<timestamp>_add_avatar_to_users.rb, and then edit it to look like the following.
+```ruby
+class AddAvatarToUsers < ActiveRecord::Migration[5.0]
+  def self.up
+    change_table :users do |t|
+      t.attachment :avatar
+    end
+  end
+
+  def self.down
+    drop_attached_file :users, :avatar
+  end
+end
+```
+Self.up tells Rails what to do when the attachment is created.  It adds a field of type attachment called avatar to the users table.  Conversly, self.down tells Rails what to do when the attachment is destroyed, it just drops the field from the table.  Now that you've changed the database schema, you need to migrate your database.
+```bash
+$ rake db:migrate
+```
+Next, we need to update the model to accept and validate an attachment, as the Paperclip gem requires.  Navigate back to /app/models/user.rb, and beneath 'has_secure_password', add the following lines.
+```ruby
+has_attached_file :avatar, :styles => { :medium => "300x300>", :thumb => "100x100#" }, :default_url => "/images/404.jpg"
+validates_attachment_content_type :avatar, :content_type => ["image/jpg", "image/jpeg", "image/png", "image/gif"]
+```
+Now that the model has been updated, we need to update the controller and the view to allow for a user to upload an avatar.  So remember the users_controller.rb file we edited earlier?  We need to add another field to the user_params method. 
+
+Navigate to /app/controllers/users_controller.rb and edit the user_params method such that it looks like this.
+```ruby
+def user_params
+	params.require(:user).permit(
+		:username,
+		:first_name,
+		:last_name,
+		:email,
+		:dob,
+		:password,
+		:password_confirmation,
+		:avatar
+		)
+end
+```
+The avatar field needs to be allowed by the users controller within the permitted parameters. Finally, you need to add an avatar field to the view so a user can actually interact with that field. We're gonna go back into /app/views/users/new.html and plop in a file field.
+```ruby
+<%= form_for :user, url: '/users' do |f| %>
+	First Name: <%= f.text_field :first_name %><br />
+	Last Name: <%= f.text_field :last_name %><br />
+	Username <%= f.text_field :username %><br />
+	Avatar: <%= f.file_field :avatar, :accept => 'image/png,image/gif,image/jpeg'  %><br />
+	Email: <%= f.text_field :email %><br />
+	Date of Birth: <%= f.date_select :date_of_birth, :start_year => Date.today.year - 100, :end_year => Date.today.year %><br />
+	Password: <%= f.password_field :password %><br />
+	Password Confirmation: <%= f.password_field :password_confirmation %><br />
+	<%= f.submit "Sign Up" %>
+<% end %>
+```
