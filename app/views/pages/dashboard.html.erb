@@ -1,6 +1,13 @@
 <h1><%= current_user.first_name %>'s Profile</h1>
 <p>Username: <%= current_user.username %>
 <p>Profile picture:<br><%= image_tag(current_user.avatar.url(:medium)) %></p>
+
+<h2><%= current_user.first_name %>'s albums</h2>
+<%= button_to "Create an album", new_album_path, method: :get %>
+<% current_user.albums.each do |album| %>
+	<p><%= link_to album.title, album_path(album) %></p>
+<% end %>
+
 <h2><%= current_user.first_name %>'s images</h2>
 <%= button_to "Upload an image", new_image_path, method: :get %>
 <% current_user.images.each do |image| %>
