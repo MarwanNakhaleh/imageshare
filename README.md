@@ -152,7 +152,7 @@ Navigate to /app/views/users/new.html.erb and edit it to look like the following
 	Last Name: <%= f.text_field :last_name %><br />
 	Username <%= f.text_field :username %><br />
 	Email: <%= f.text_field :email %><br />
-	Date of Birth: <%= f.date_select :date_of_birth, :start_year => Date.today.year - 100, :end_year => Date.today.year %><br />
+	Date of Birth: <%= f.date_select :dob, :start_year => Date.today.year - 100, :end_year => Date.today.year %><br />
 	Password: <%= f.password_field :password %><br />
 	Password Confirmation: <%= f.password_field :password_confirmation %><br />
 	<%= f.submit "Sign Up" %>
@@ -257,7 +257,7 @@ The avatar field needs to be allowed by the users controller within the permitte
 	Username <%= f.text_field :username %><br />
 	Avatar: <%= f.file_field :avatar, :accept => 'image/png,image/gif,image/jpeg'  %><br />
 	Email: <%= f.text_field :email %><br />
-	Date of Birth: <%= f.date_select :date_of_birth, :start_year => Date.today.year - 100, :end_year => Date.today.year %><br />
+	Date of Birth: <%= f.date_select :dob, :start_year => Date.today.year - 100, :end_year => Date.today.year %><br />
 	Password: <%= f.password_field :password %><br />
 	Password Confirmation: <%= f.password_field :password_confirmation %><br />
 	<%= f.submit "Sign Up" %>
