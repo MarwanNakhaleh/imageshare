@@ -263,3 +263,102 @@ The avatar field needs to be allowed by the users controller within the permitte
 	<%= f.submit "Sign Up" %>
 <% end %>
 ```
+Now your user signup and authentication should be ready to go!
+### Set up image uploads
+It's back to the console to generate the model.
+```bash
+$ rails g model Image img:attachment title:string caption:string user_id:integer
+$ rake db:migrate
+```
+Now that you have an Image table in the database, you can fix up the models such that you can access an image's user through image.user and a user's images through user.images!
+Navigate to /app/models/user.rb and append the following line within the User class.
+```ruby
+has_many :images
+```
+Next, navigate to /app/models/image.rb and add the following lines within the Image class
+```ruby
+belongs_to :user
+has_attached_file :img, :styles => { :medium => "300x300>", :thumb => "100x100#" }, :default_url => "/images/404.jpg"
+validates_attachment_content_type :img, :content_type => ["image/jpg", "image/jpeg", "image/png", "image/gif"]
+```
+This creates the relationship between Image and User, and validates the image, as is necessary with the Paperclip gem.
+After that, create a new file as /app/controllers/images_controller.rb and edit it to look like the following.
+```ruby
+class ImagesController < ApplicationController
+	before_action :authorize
+
+	def new
+		@image = Image.new
+	end
+
+	def show
+		@image = Image.find(params[:id])
+	end
+
+	def create
+		@image = Image.new image_params
+		@image.user_id = current_user.id
+		if @image.save
+			redirect_to root_path
+		else
+			redirect_to new_image_path
+		end
+	end
+
+	def destroy
+		@image = Image.find(params[:id])
+		if image.destroy
+			redirect_to root_path
+		else
+			redirect_to image_path(image.id)
+		end
+	end
+
+	protected
+	def image_params
+		params.require(:image).permit(
+			:title,
+			:img,
+			:caption,
+			:user_id
+			)
+	end
+end
+```
+Next, add the following line to /config/routes.rb.
+```ruby
+resources :images
+```
+What this does is generate the necessary routes you specified in the controller once you run the ```rake routes``` command.
+
+To make use of this model and controller, we need views to create the items. Create a new file as /app/views/images/new.html.erb and edit the form to look like so.
+```ruby
+<h1>Upload an image</h1>
+
+<%= form_for :image, url: "/images" do |f| %>
+	Title <%= f.text_field :title %><br />
+	Image: <%= f.file_field :img, :accept => 'image/png,image/gif,image/jpeg'  %><br />
+	Caption: <%= f.text_field :caption %><br />
+	<%= f.submit "Upload" %>
+<% end %>
+```
+In the convention of ```resources :images```, the "/images" URL is routed to posting a new image and run the create method from the images controller. Next, we wanna be able to show some information about an image when we link to it. Create a new file /app/views/images/show.html.erb.
+```ruby
+<h1><%= @image.title %></h1>
+<p>Uploaded by: <%= link_to @image.user.username, users_path(@image.user) %></p>
+<p><%= image_tag(@image.img) %>
+<p><%= @image.caption %></p>
+```
+This will pull in the @image instance variable we created in the show method in the images controller and gather its information to display.
+
+Finally, we want to fix the dashboard so that it will show a user's images and display a button that will allow you to navigate to the image upload page.
+Add the following lines to /app/views/pages/dashboard.html.erb
+```ruby
+<h2><%= current_user.first_name %>'s images</h2>
+<%= button_to "Upload an image", new_image_path, method: :get %>
+<% current_user.images.each do |image| %>
+	<p><%= link_to image_tag(image.img.url(:thumb)), image_path(image) %></p>
+<% end %>
+```
+And there you have it, you have a working image upload functionality!
+
