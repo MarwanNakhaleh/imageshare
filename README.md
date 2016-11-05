@@ -3,11 +3,13 @@
 ```$ rails new imageshare```
 ### Adding gems
 Add the following to your Gemfile
-```gem 'bootstrap-sass'
+```
+gem 'bootstrap-sass'
 gem 'bcrypt', '~> 3.1.7'
 gem 'devise'
 gem 'paperclip'
-gem 'pg'```
+gem 'pg'
+```
 ### Creating databases
 Edit your config/database.yml file to look like the following
 ```
