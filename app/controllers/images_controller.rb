@@ -34,7 +34,8 @@ class ImagesController < ApplicationController
 			:title,
 			:img,
 			:caption,
-			:user_id
+			:user_id,
+			:album_id
 			)
 	end
 end

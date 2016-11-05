@@ -3,6 +3,7 @@
 <%= form_for :image, url: "/images" do |f| %>
 	Title <%= f.text_field :title %><br />
 	Image: <%= f.file_field :img, :accept => 'image/png,image/gif,image/jpeg'  %><br />
+	Album: <%= f.collection_select(:album_id, Album.where(:user_id => current_user.id), :id, :title) %>
 	Caption: <%= f.text_field :caption %><br />
 	<%= f.submit "Upload" %>
 <% end %>
