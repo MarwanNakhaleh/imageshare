@@ -10,4 +10,5 @@ Rails.application.routes.draw do
 
 	get '/signup' => 'users#new'
 	post '/users' => 'users#create'
+	get '/user_directory' => 'users#index'
 end
