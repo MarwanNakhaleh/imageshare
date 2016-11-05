@@ -1,9 +1,12 @@
 # How to Rails
 ### Create the app
-```$ rails new imageshare```
+```bash
+$ rails new imageshare
+$ cd imageshare
+```
 ### Adding gems
 Add the following to your Gemfile
-```
+```ruby
 gem 'bootstrap-sass'
 gem 'bcrypt', '~> 3.1.7'
 gem 'devise'
@@ -12,7 +15,7 @@ gem 'pg'
 ```
 ### Creating databases
 Edit your config/database.yml file to look like the following
-```
+```ruby
 # SQLite version 3.x
 #   gem install sqlite3
 #
@@ -38,4 +41,15 @@ test:
 production:
   <<: *default
   database: imageshare_prod
+```
+Then run the following commands
+```bash
+$ bundle install
+$ rake db:create
+```
+### Creating the User model
+We're not gonna bother with Devise for this, since it's too restrictive for our purposes
+```bash
+$ rails g model User first_name:string last_name:string email:string username:string password_digest:string dob:date
+$ rake db:migrate
 ```
