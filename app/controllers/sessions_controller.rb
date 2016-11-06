@@ -3,7 +3,9 @@ class SessionsController < ApplicationController
   end
 
   def create
-  	user = User.find_by_username(params[:username])
+  	user = User.where(:email => params[:email]).last
+    puts "\n\n\nUser: #{user}\n"
+    puts "Authenticated?: #{user.authenticate(params[:password])}\n\n\n"
   	if user && user.authenticate(params[:password])
   		session[:user_id] = user.id
   		redirect_to root_path

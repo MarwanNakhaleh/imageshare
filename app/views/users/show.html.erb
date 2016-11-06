@@ -1,0 +1,39 @@
+<h1><%= @user.first_name %>'s Profile</h1>
+<p>Username: <%= @user.username %>
+<p>Profile picture:<br><%= image_tag(@user.avatar.url(:medium)) %></p>
+
+<a href="<%= following_user_path(@user) %>">
+<strong id="following" class="stat">
+  <%= @user.following.count %>
+</strong>
+following
+</a>
+<a href="<%= followers_user_path(@user) %>">
+<strong id="followers" class="stat">
+  <%= @user.followers.count %>
+</strong>
+followers
+</a>
+
+<% if @user.id != current_user.id %>
+	<% if Relationship.where(:follower_id => current_user.id, :followed_id => @user.id).length == 0 %>
+		<%= form_for(current_user.active_relationships.build, remote: true) do |f| %>
+			<div><%= hidden_field_tag :followed_id, @user.id %></div>
+			<%= f.submit "Follow #{@user.username}", class: "btn btn-primary" %>
+		<% end %>
+	<% else %>
+		<%= form_for(current_user.active_relationships.find_by(followed_id: @user.id), html: { method: :delete }, remote: true) do |f| %>
+			<%= f.submit "Unfollow #{@user.username}", class: "btn" %>
+		<% end %>
+	<% end %>
+<% end %>
+
+<h2><%= @user.username %>'s albums</h2>
+<% @user.albums.each do |album| %>
+	<p><%= link_to album.title, album_path(album) %></p>
+<% end %>
+
+<h2><%= @user.username %>'s images</h2>
+<% @user.images.each do |image| %>
+	<p><%= link_to image_tag(image.img.url(:thumb)), image_path(image) %></p>
+<% end %>

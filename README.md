@@ -361,4 +361,167 @@ Add the following lines to /app/views/pages/dashboard.html.erb
 <% end %>
 ```
 And there you have it, you have a working image upload functionality!
+### Creating the albums
+Album will be its own model, just like Image and User. So you can guess what we have to do here.
+```bash
+$ rails g model Album title:string description:string user_id:integer
+$ rake db:migrate
+```
+Remember, the user_id field is to identify which user owns the album. We now need to edit all three models now. Let's start with /app/models/user.rb. It should now look like the following.
+```ruby
+class User < ApplicationRecord
+	has_secure_password
+	has_attached_file :avatar, :styles => { :medium => "300x300>", :thumb => "100x100#" }, :default_url => "/images/404.jpg"
+	validates_attachment_content_type :avatar, :content_type => ["image/jpg", "image/jpeg", "image/png", "image/gif"]
 
+	has_many :images
+	has_many :albums
+end
+```
+User can have many Albums, and Album belongs to User. Speaking of the latter, open up /app/models/album.rb
+```ruby
+class Album < ApplicationRecord
+	belongs_to :user, foreign_key: "user_id"
+	has_many :images
+end
+```
+The foreign_key flag identifies the User the Album belongs to by the Album's user_id field, making it accessible just by typing ```@album.user``` from the view.
+Finally, we have to edit the Image model such that it belongs to Album as well as User.
+```ruby
+class Image < ApplicationRecord
+	belongs_to :user
+	belongs_to :album
+
+	has_attached_file :img, :styles => { :medium => "300x300>", :thumb => "100x100#" }, :default_url => "/images/404.jpg"
+	validates_attachment_content_type :img, :content_type => ["image/jpg", "image/jpeg", "image/png", "image/gif"]
+end
+```
+It really doesn't matter what order you place the lines of code for this one, though it would matter when you have to write methods for your model to make it easier to manipulate. That's the beauty of the MVC architecture, it's not NECESSARY to make an application function, but it's so much cleaner and easier to manipulate everything once you get the hang of it.
+Now we need to create the controller. If you type the following command:
+```bash
+$ rails g controller albums index new show create destroy
+```
+This will generate the five empty methods you need to begin implementing the full functionality of Album. Now to implement them.
+In /app/controllers/album_controller.rb, the new method will look like the following.
+```ruby
+def new
+	@album = Album.new
+end
+```
+The index method will look like the following, though it's not necessary since we're not interested in having a directory of all albums. If you ever did need an index of all records, or a specific subset of records, this is how you can do it.
+```ruby
+def index
+	@albums = Album.all
+end
+```
+The methods for create and destroy will be very similar to those from the images controller, but applied to Album instead.
+```ruby
+def create
+	@album = Album.new(album_params)
+	@album.user_id = current_user.id
+	if @album.save
+		redirect_to root_path
+	else
+		redirect_to new_album_path
+	end
+end
+
+def destroy
+	@album = Album.find(params[:id])
+	if @album.destroy
+		redirect_to root_path
+	else
+		redirect_to album_path(@album)
+	end
+end
+```
+The show method will be super simple, as seen in previously written controllers.
+```ruby
+def show
+	@album = Album.find(params[:id])
+end
+```
+The value ```params[:id]``` is gathered from the URL passed to the browser, as seen when you run the ```rake routes``` command. This query will search the Album table in the database and find (which by default searches by ID) the album with the given ID.
+### Create user relationships
+We want users to be able to follow and unfollow each other so they can be subscribed to the newest stuff each user posts.  We're gonna make a model for relationships, quite similar to that from Michael Hartl's Rails tutorial.
+```bash
+$ rails generate model Relationship follower_id:integer followed_id:integer
+$ rake db:migrate
+```
+A migration has been generated such that if you go to /db/migrate/<timestamp>_create_relationships, it'll look like the following.
+```ruby
+class CreateRelationships < ActiveRecord::Migration[5.0]
+  def change
+    create_table :relationships do |t|
+      t.integer :follower_id
+      t.integer :followed_id
+
+      t.timestamps
+    end
+  end
+end
+```
+This will be a table that stores every single user relationship. If I follow you on this image sharing app, my user ID will be stored under follower_id, and your user ID will be stored under followed_id. 
+Below ```t.timestamps```, append the following code.
+```ruby
+add_index :relationships, :follower_id
+add_index :relationships, :followed_id
+add_index :relationships, [:follower_id, :followed_id], unique: true
+```
+This uses the IDs as indices, and makes it such that no duplicate entries will be stored in the table.  If I follow you on this app, we only want that relationship stored once. If you follow me, that's a different relationship since the follower_id and followed_id will be switched. 
+
+Now we need to add this relation to the user model.  Navigate to /app/models/user.rb and add the following relationship.
+```ruby
+has_many :active_relationships, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
+has_many :passive_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
+has_many :following, through: :active_relationships,  source: :followed
+has_many :followers, through: :passive_relationships, source: :follower
+
+def feed
+	following_ids = "SELECT followed_id FROM relationships WHERE follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id", user_id: id)
+end
+
+def follow(other_user)
+	active_relationships.create(followed_id: other_user.id)
+end
+
+def unfollow(other_user)
+	active_relationships.find_by(followed_id: other_user.id).destroy
+end
+
+def following?(other_user)
+	following.include?(other_user)
+end
+```
+This renames the relationship class to active_relationships, such that a user is a follower and when they create an active relationship with another user, that user's ID is added to followed_id. We also need to add to the Relationship model that it belongs to User. So in /app/models/relationship.rb, edit it to look like the following.
+```ruby
+class Relationship < ApplicationRecord
+	belongs_to :follower, class_name: "User"
+	belongs_to :followed, class_name: "User"
+	validates :follower_id, presence: true
+  	validates :followed_id, presence: true
+end
+```
+Now we need to write the business logic for follow and unfollow buttons. Go back to your terminal and make a new controller.
+```
+$ rails g controller relationships create destroy
+```
+Now navigate to your controller at /app/controllers/relationships_controller.rb and edit it to look like the following.
+```ruby
+class RelationshipsController < ApplicationController
+	before_action :authorize
+
+	def create
+		user = User.find(params[:followed_id])
+		current_user.follow(user)
+		redirect_to user
+	end
+
+	def destroy
+		user = Relationship.find(params[:id]).followed
+		current_user.unfollow(user)
+		redirect_to user
+	end
+end
+```
