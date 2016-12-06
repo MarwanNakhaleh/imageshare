@@ -9,11 +9,13 @@
   </head>
 
   <body>
+    <%= render 'layouts/flash', flash: flash %>
+
   	<% if current_user %>
   		Signed in as <%= current_user.username %> | <%= link_to "Dashboard", root_path %> | <%= link_to "Logout", logout_path %>
-	<% else %>
-		<%= link_to 'Login', login_path %> | <%= link_to 'Signup', signup_path %>
-	<% end %>
+    <% else %>
+		  <%= link_to 'Login', login_path %> | <%= link_to 'Signup', signup_path %>
+    <% end %>
     
     <%= yield %>
   

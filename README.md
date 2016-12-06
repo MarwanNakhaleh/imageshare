@@ -13,15 +13,16 @@ gem 'devise'
 gem 'paperclip'
 gem 'pg'
 ```
+
+Make sure to remove the following line from the Gemfile as well
+```ruby
+gem 'sqlite3'
+```
+We will be using Postgresql, so there is no need for SQLite.
+
 ### Creating databases
 Edit your config/database.yml file to look like the following
 ```ruby
-# SQLite version 3.x
-#   gem install sqlite3
-#
-#   Ensure the SQLite 3 gem is defined in your Gemfile
-#   gem 'sqlite3'
-#
 default: &default
   adapter: postgresql
   pool: 5
@@ -166,7 +167,7 @@ Now that a user can sign up, we want a way for them to log in as well.  So we're
 
 <%= form_tag '/login' do %>
 
-  Email: <%= text_field_tag :email %>
+  Username: <%= text_field_tag :username %>
   Password: <%= password_field_tag :password %>
   <%= submit_tag "Submit" %>
 
@@ -361,4 +362,36 @@ Add the following lines to /app/views/pages/dashboard.html.erb
 <% end %>
 ```
 And there you have it, you have a working image upload functionality!
+### Provide flash srrors
+Now as you might have noticed, we don't show any sort of error if something goes awry with any of the forms users fill out, we've just been redirecting so far.  We're gonna fix that so users can see error messages.  First we're gonna define a helper method in the application helper file.  Navigate to app/helpers/application_helper.rb and add the following code.
+```ruby
+def bootstrap_class_for flash_type
+	case flash_type
+		when :success
+			"alert-success"
+		when :error
+			"alert-error"
+		when :alert
+			"alert-block"
+		when :notice
+			"alert-info"
+		else
+			flash_type.to_s
+	end
+end
+```
+What adding a method to application_helper.rb does is gives the entire application access to a particular method.  We will want flash notices to be available on many different pages of the website as necessary.
 
+Create a new file in app/views/layouts called _flash.html.erb.  The underscore is necessary to denote that it is a partial view to be rendered in another page.  Add the following code to the file.
+```ruby
+<% flash.each do |type, message| %>
+	<div class="alert <%= bootstrap_class_for(type) %> fade in">
+		<button class="close" data-dismiss="alert">×</button>
+    	<%= message %>
+  	</div>
+<% end %>
+```
+What this does is, this will go through any flash messages (that we will specify in the controllers) that have been set and display them in your view.  Now we need to display these flash messages.  Navigate to app/views/layouts/application.html.erb and add the following code right below the <body> tag.
+```ruby
+<%= render 'layouts/flash', flash: flash %>
+```
