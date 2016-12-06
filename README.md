@@ -264,6 +264,13 @@ The avatar field needs to be allowed by the users controller within the permitte
 	<%= f.submit "Sign Up" %>
 <% end %>
 ```
+
+Finally, edit your app/views/pages/dashboard.html.erb file to look like the following.
+```ruby
+<h2><%= current_user.username %>'s profile</h2>
+<p><%= image_tag(current_user.avatar.url(:medium)) %></p>
+```
+
 Now your user signup and authentication should be ready to go!
 ### Set up image uploads
 It's back to the console to generate the model.
@@ -355,9 +362,6 @@ This will pull in the @image instance variable we created in the show method in 
 Finally, we want to fix the dashboard so that it will show a user's images and display a button that will allow you to navigate to the image upload page.
 Add the following lines to /app/views/pages/dashboard.html.erb
 ```ruby
-<h2><%= current_user.username %>'s profile</h2>
-<p><%= image_tag(current_user.avatar.url(:medium)) %></p>
-
 <h2><%= current_user.first_name %>'s images</h2>
 <%= button_to "Upload an image", new_image_path, method: :get %>
 <% current_user.images.each do |image| %>
