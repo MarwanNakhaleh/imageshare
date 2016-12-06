@@ -73,7 +73,7 @@ end
 ```
 Then create a sessions controller
 ```bash
-$ rails g controller sessions new create destroy
+$ rails g controller sessions new
 ```
 In your new sessions controller (located at /app/controllers/sessions_controller.rb), edit it to look like the following
 ```ruby
@@ -101,7 +101,7 @@ To log in a user, you have to create a user session. What the code for the creat
 
 After that, create a users controller.
 ```bash
-$ rails g controller users new create destroy
+$ rails g controller users new
 ```
 In your new users controller (located at /app/controllers/users_controller.rb), edit it to look like the following.
 ```ruby
